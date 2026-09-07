@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AumerA Fashion Hub - Chat Support</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: #0a1f44;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: #0a1f44;
+    color: #d4af37;
+    padding: 16px 20px;
+    text-align: center;
+    border-bottom: 2px solid #d4af37;
+  }
+  header h1 { margin: 0; font-size: 18px; }
+  header p { margin: 4px 0 0; font-size: 12px; color: #cbd5e1; }
+  #chat-container {
+    flex: 1;
+    background: #f4f1ea;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+  .msg { margin-bottom: 14px; max-width: 85%; line-height: 1.5; font-size: 15px; }
+  .msg.bot {
+    background: #fff; padding: 10px 14px; border-radius: 12px 12px 12px 2px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+  .msg.user {
+    background: #0a1f44; color: #fff; margin-left: auto;
+    padding: 10px 14px; border-radius: 12px 12px 2px 12px;
+  }
+  #input-row {
+    display: flex;
+    padding: 12px;
+    background: #fff;
+    border-top: 1px solid #e2e2e2;
+  }
+  #input-row input {
+    flex: 1;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 10px 16px;
+    font-size: 15px;
+    outline: none;
+  }
+  #input-row button {
+    background: #d4af37;
+    color: #0a1f44;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    margin-left: 8px;
+    font-weight: 600;
+    font-size: 15px;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🛍️ AumerA Fashion Hub</h1>
+    <p>Customer Support Chat</p>
+  </header>
+  <div id="chat-container">
+    <div id="messages"></div>
+    <div id="input-row">
+      <input id="input" placeholder="നിങ്ങളുടെ ചോദ്യം ടൈപ്പ് ചെയ്യൂ..." onkeydown="if(event.key==='Enter')sendMsg()" />
+      <button onclick="sendMsg()">അയക്കൂ</button>
+    </div>
+  </div>
+
+<script>
+  const CHAT_ENDPOINT = "/api/chat";
+
+  function addMsg(sender, text) {
+    const msgs = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = 'msg ' + sender;
+    div.textContent = text;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  async function sendMsg() {
+    const input = document.getElementById('input');
+    const message = input.value.trim();
+    if (!message) return;
+    addMsg('user', message);
+    input.value = '';
+    addMsg('bot', '...');
+
+    try {
+      const res = await fetch(CHAT_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+      });
+      const data = await res.json();
+      document.querySelectorAll('.msg.bot').forEach(el => {
+        if (el.textContent === '...') el.remove();
+      });
+      addMsg('bot', data.reply || 'ക്ഷമിക്കണം, ഒരു പ്രശ്നം ഉണ്ടായി.');
+    } catch (e) {
+      document.querySelectorAll('.msg.bot').forEach(el => {
+        if (el.textContent === '...') el.remove();
+      });
+      addMsg('bot', 'Connection പ്രശ്നം. വീണ്ടും ശ്രമിക്കൂ.');
+    }
+  }
+
+  window.onload = () => addMsg('bot', 'നമസ്കാരം! AumerA-യിൽ എന്ത് സഹായം വേണം? 😊');
+</script>
+</body>
+</html>
